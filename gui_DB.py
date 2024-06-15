@@ -38,8 +38,9 @@ class DatabaseManager(QMainWindow):
 
         # create db widgets and add to layouts
         self.url_label = QLabel("Database URL:")
-        self.url_input = QLineEdit(cr.MONGO_URL)
+        self.url_input = QComboBox()
         self.url_input.setFixedWidth(510)
+        self.url_input.addItems(cr.MONGO_URL)
         self.db_label = QLabel("Database:")
         self.db_input = QComboBox()
         self.db_input.setFixedWidth(140)
@@ -52,6 +53,18 @@ class DatabaseManager(QMainWindow):
         self.db_layout.addWidget(self.db_input)
         self.db_layout.addWidget(self.collection_label)
         self.db_layout.addWidget(self.collection_input)
+
+        # create query widgets and add to layouts
+        self.query_label = QLabel("Query:")
+        self.query_input = QTextEdit()
+        self.query_input.setFixedWidth(500)
+        self.query_input.setFixedHeight(80)
+        self.query_button = QPushButton("Search")
+        self.query_button.setFixedWidth(50)
+        self.query_layout.addWidget(self.query_label)
+        self.query_layout.addWidget(self.query_input)
+        self.query_layout.addWidget(self.query_button)
+        self.query_layout.addStretch(1)
 
 
 

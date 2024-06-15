@@ -1,9 +1,9 @@
 import numpy as np
 import pyqtgraph as pgt
-from PyQt5.QtCore import QTimer, QObject, Qt
+from PyQt5.QtCore import Qt, QAbstractTableModel
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLineEdit
 from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
 
@@ -48,14 +48,14 @@ class DatabaseManager(QMainWindow):
         # create db widgets and add to layouts
         self.url_label = QLabel("Database URL:")
         self.url_input = QComboBox()
-        self.url_input.setFixedWidth(510)
+        self.url_input.setFixedWidth(500)
         self.url_input.addItems(cr.MONGO_URL)
         self.db_label = QLabel("Database:")
         self.db_input = QComboBox()
         self.db_input.setFixedWidth(140)
         self.collection_label = QLabel("Collection:")
         self.collection_input = QComboBox()
-        self.collection_input.setFixedWidth(140)
+        self.collection_input.setFixedWidth(150)
         self.db_layout.addWidget(self.url_label)
         self.db_layout.addWidget(self.url_input)
         self.db_layout.addWidget(self.db_label)
@@ -70,6 +70,7 @@ class DatabaseManager(QMainWindow):
         self.query_input.setFixedHeight(80)
         self.query_button = QPushButton("Search")
         self.query_button.setFixedWidth(50)
+        self.query_button.clicked.connect(self.on_search_button_clicked)
         self.query_layout.addWidget(self.query_label)
         self.query_layout.addWidget(self.query_input)
         self.query_layout.addWidget(self.query_button)
@@ -108,5 +109,62 @@ class DatabaseManager(QMainWindow):
         if db_name:
             self.collection_input.clear()
             self.collection_input.addItems(db.list_collections(db_name))
+
+    # function parsing user query input
+    def create_query(self):
+        query_text = self.query_input.toPlainText().strip()
+        # parse the query string to obtain individual key-value pairs
+        query_parts = query_text.split(";")
+        query = {}
+        for part in query_parts:
+            if ":" in part:
+                key, value = part.split(":")
+                key = key.strip()
+                values = [v.strip() for v in value.split(",")] # creates a list of values for a given key in case user specified multiple values to search for
+
+                if key in ["test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
+                    try:
+                        values = [str(v) for v in values]
+                    except ValueError:
+                        continue
+                    if len(values) > 1: # if user specified multiple values and we dealing with a list
+                        query[key] = {"$in": values}
+                    else:
+                        query[key] = values[0]
+        return query
+    
+    # function to search database based on given query 
+    def search_database(self, query):
+        db_name = self.db_input.currentText()
+        collection_name = self.collection_input.currentText()
+
+        if db_name and collection_name:
+            documents = db.find_documents(db_name, collection_name, query)
+
+        return documents
+
+    # helper function for making a database query when search button is clicked
+    def on_search_button_clicked(self):
+        if len(self.query_input.toPlainText()) > 0:
+            query = self.create_query()
+            documents = self.search_database(query)
+            #data = db.transform_documents(documents)
+
+            if documents:
+                table_model = QStandardItemModel()
+                headers = list(documents[0].keys())
+                headers.remove("measurements")
+                table_model.setHorizontalHeaderLabels(headers)
+                for document in documents:
+                    row = []
+                    for key in headers:
+                        item = QStandardItem(str(document[key]))
+                        row.append(item)
+                    table_model.appendRow(row)
+                self.table_view.setModel(table_model)
+                self.table_view.resizeColumnsToContents()
+                self.table_view.resizeRowsToContents()
+            else:
+                QMessageBox.warning(self, "Current query", "No results found")
 
 

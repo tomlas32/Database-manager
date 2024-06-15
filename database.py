@@ -13,3 +13,7 @@ def get_database():
 # list collections
 def list_collections(database_name):
     return list(client[database_name].list_collection_names())
+
+# function for finding documents in database
+def find_documents(database, collection, query):
+    return list(client[database][collection].find(query))

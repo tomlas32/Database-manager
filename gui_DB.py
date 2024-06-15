@@ -1,8 +1,8 @@
 import numpy as np
 import pyqtgraph as pgt
-from PyQt5.QtCore import QTimer, QObject, pyqtSignal, Qt
-from PyQt5.QtWidgets import QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLCDNumber, QLineEdit
-from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit
+from PyQt5.QtCore import QTimer, QObject, Qt
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLineEdit
+from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView
 from PyQt5.QtGui import QIcon
 import credentials as cr
 
@@ -65,6 +65,14 @@ class DatabaseManager(QMainWindow):
         self.query_layout.addWidget(self.query_input)
         self.query_layout.addWidget(self.query_button)
         self.query_layout.addStretch(1)
+
+        # create table view widget and add to the corresponding layout
+        self.table_view = QTableView()
+        self.table_view.setFixedWidth(1000)
+        self.table_view.setFixedHeight(270)
+        self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.result_layout.addWidget(self.table_view)
 
 
 

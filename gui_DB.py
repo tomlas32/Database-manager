@@ -71,7 +71,7 @@ class DatabaseManager(QMainWindow):
         self.query_input.setFixedHeight(80)
         self.query_button = QPushButton("Search")
         self.query_button.setFixedWidth(50)
-        self.query_button.clicked.connect(lambda: self.on_search_button_clicked(table_model))
+        self.query_button.clicked.connect(self.on_search_button_clicked)
         self.query_layout.addWidget(self.query_label)
         self.query_layout.addWidget(self.query_input)
         self.query_layout.addWidget(self.query_button)
@@ -86,7 +86,7 @@ class DatabaseManager(QMainWindow):
         self.table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
-        table_model = QStandardItemModel()
+        self.table_model = QStandardItemModel()
         #self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self.table_view.mousePressEvent
         self.result_layout.addWidget(self.table_view)
@@ -151,8 +151,8 @@ class DatabaseManager(QMainWindow):
         return documents
 
     # helper function for making a database query when search button is clicked
-    def on_search_button_clicked(self, table_model):
-        table_model.clear()
+    def on_search_button_clicked(self):
+        self.table_model.clear()
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
             documents = self.search_database(query)
@@ -162,14 +162,14 @@ class DatabaseManager(QMainWindow):
                 #table_model = QStandardItemModel()
                 headers = list(documents[0].keys())
                 headers.remove("measurements")
-                table_model.setHorizontalHeaderLabels(headers)
+                self.table_model.setHorizontalHeaderLabels(headers)
                 for document in documents:
                     row = []
                     for key in headers:
                         item = QStandardItem(str(document[key]))
                         row.append(item)
-                    table_model.appendRow(row)
-                self.table_view.setModel(table_model)
+                    self.table_model.appendRow(row)
+                self.table_view.setModel(self.table_model)
                 self.table_view.resizeColumnsToContents()
                 self.table_view.resizeRowsToContents()
             else:

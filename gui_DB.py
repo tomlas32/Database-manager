@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAb
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
+from graph_display_gui import LineGraphWindow
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
@@ -70,7 +71,7 @@ class DatabaseManager(QMainWindow):
         self.query_input.setFixedHeight(80)
         self.query_button = QPushButton("Search")
         self.query_button.setFixedWidth(50)
-        self.query_button.clicked.connect(self.on_search_button_clicked)
+        self.query_button.clicked.connect(lambda: self.on_search_button_clicked(table_model))
         self.query_layout.addWidget(self.query_label)
         self.query_layout.addWidget(self.query_input)
         self.query_layout.addWidget(self.query_button)
@@ -85,6 +86,7 @@ class DatabaseManager(QMainWindow):
         self.table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
+        table_model = QStandardItemModel()
         #self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self.table_view.mousePressEvent
         self.result_layout.addWidget(self.table_view)
@@ -149,14 +151,15 @@ class DatabaseManager(QMainWindow):
         return documents
 
     # helper function for making a database query when search button is clicked
-    def on_search_button_clicked(self):
+    def on_search_button_clicked(self, table_model):
+        table_model.clear()
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
             documents = self.search_database(query)
             #data = db.transform_documents(documents)
 
             if documents:
-                table_model = QStandardItemModel()
+                #table_model = QStandardItemModel()
                 headers = list(documents[0].keys())
                 headers.remove("measurements")
                 table_model.setHorizontalHeaderLabels(headers)
@@ -189,3 +192,13 @@ class DatabaseManager(QMainWindow):
                 data.append(index.data())
             text = ''.join(data)
             QApplication.clipboard().setText(text)
+    
+    # function for visualizing data based on user choice from table view
+    def open_graph_window(self):
+        selected_indexes = self.table_view.selectedIndexes()
+        entry_ids = []
+
+        for index in selected_indexes:
+            raw_data = self.table_model.itemFromIndex(index).data()
+        
+

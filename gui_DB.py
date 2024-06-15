@@ -2,7 +2,7 @@ import numpy as np
 import pyqtgraph as pgt
 from PyQt5.QtCore import Qt, QAbstractTableModel
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLineEdit
-from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView
+from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAbstractItemView, QMenu, QAction, QApplication
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
@@ -82,6 +82,11 @@ class DatabaseManager(QMainWindow):
         self.table_view.setFixedHeight(270)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table_view.customContextMenuRequested.connect(self.show_context_menu)
+        #self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        #self.table_view.mousePressEvent
         self.result_layout.addWidget(self.table_view)
 
         # create buttons and add to the corresponding layout
@@ -167,4 +172,20 @@ class DatabaseManager(QMainWindow):
             else:
                 QMessageBox.warning(self, "Current query", "No results found")
 
-
+    # function defining context menu 
+    def show_context_menu(self, point):
+        menu = QMenu(self)
+        copy_action = QAction("Copy", self)
+        copy_action.triggered.connect(self.copy_to_clipboard)
+        menu.addAction(copy_action)
+        menu.exec_(self.table_view.viewport().mapToGlobal(point))
+    
+    # function for copying selected rows to clipboard
+    def copy_to_clipboard(self):
+        selected_indexes = self.table_view.selectedIndexes()
+        if selected_indexes:
+            data = []
+            for index in selected_indexes:
+                data.append(index.data())
+            text = ''.join(data)
+            QApplication.clipboard().setText(text)

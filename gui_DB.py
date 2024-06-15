@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, 
 from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView
 from PyQt5.QtGui import QIcon
 import credentials as cr
+import database as db
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
@@ -27,8 +28,6 @@ class DatabaseManager(QMainWindow):
         self.buttons_layout = QHBoxLayout()
 
         ######################## specify widgets and add to layouts
-
-        
         # create spacers
         self.spacer_1 = QSpacerItem(800, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.spacer_2 = QSpacerItem(800, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -94,6 +93,20 @@ class DatabaseManager(QMainWindow):
         self.buttons_layout.addWidget(self.clear_button)
         self.buttons_layout.addStretch(1)
 
-
+        # database specific connection initialization
+        self.db_input.currentTextChanged.connect(self.populate_collection_combobox)
+        self.populate_db_combobox()
+        
+    # function for populating database combobox with the user created databases
+    def populate_db_combobox(self):
+        self.db_input.clear()
+        self.db_input.addItems(db.get_database())
+    
+    # function for populating collection combobox with the user created collections
+    def populate_collection_combobox(self):
+        db_name = self.db_input.currentText()
+        if db_name:
+            self.collection_input.clear()
+            self.collection_input.addItems(db.list_collections(db_name))
 
 

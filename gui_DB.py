@@ -15,7 +15,7 @@ class DatabaseManager(QMainWindow):
         main_icon = QIcon("D:\Projects\Work projects\Database-manager\\assets\main-icon.ico")
         
         ######################## specify basic main window configurations
-        self.setWindowTitle("Database Manger")
+        self.setWindowTitle("Database Manager")
         self.setWindowIcon(main_icon)
         self.setFixedSize(1024, 500)
 
@@ -27,13 +27,23 @@ class DatabaseManager(QMainWindow):
         self.buttons_layout = QHBoxLayout()
 
         ######################## specify widgets and add to layouts
+
+        
+        # create spacers
+        self.spacer_1 = QSpacerItem(800, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.spacer_2 = QSpacerItem(800, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.spacer_3 = QSpacerItem(800, 50, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.spacer_4 = QSpacerItem(800, 50, QSizePolicy.Fixed, QSizePolicy.Fixed)
         # main widget and layouts
         self.window = QWidget()
         self.window.setLayout(self.main_layout)
         self.setCentralWidget(self.window)
         self.main_layout.addLayout(self.db_layout)
+        self.main_layout.addSpacerItem(self.spacer_1)
         self.main_layout.addLayout(self.query_layout)
+        self.main_layout.addSpacerItem(self.spacer_2)
         self.main_layout.addLayout(self.result_layout)
+        self.main_layout.addSpacerItem(self.spacer_3)
         self.main_layout.addLayout(self.buttons_layout)
 
         # create db widgets and add to layouts
@@ -73,6 +83,16 @@ class DatabaseManager(QMainWindow):
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.result_layout.addWidget(self.table_view)
+
+        # create buttons and add to the corresponding layout
+        self.ok_button = QPushButton("OK")
+        self.export_button = QPushButton("Export")
+        self.clear_button = QPushButton("Clear")
+        self.buttons_layout.addWidget(self.ok_button)
+        self.buttons_layout.addWidget(self.export_button)
+        self.buttons_layout.addSpacerItem(self.spacer_4)
+        self.buttons_layout.addWidget(self.clear_button)
+        self.buttons_layout.addStretch(1)
 
 
 

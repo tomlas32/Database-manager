@@ -53,7 +53,7 @@ class LineGraphWindow(QMainWindow):
             y = [float(point[2]) for point in measurement] # something here might not be working
             name = measurement[0][0]
             pen = pg.mkPen(color=(i, len(measurements_list)), width=2)
-            self.graph_widget.plot(x, y, pen=pen, name=name)
+            self.graph_widget.plot(x, y, pen=pen, name=name+str(i+1))
 
 
 

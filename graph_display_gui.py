@@ -1,17 +1,18 @@
 import numpy as np
 import pyqtgraph as pg
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QItemSelection
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLineEdit
-from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAbstractItemView, QMenu, QAction, QApplication
+from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAbstractItemView, QMenu, QAction, QApplication, QHeaderView
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
 import sys
 import pyqtgraph as pg
+from data_models import MeasurementTableModel
 
 
 class LineGraphWindow(QMainWindow):
-    def __init__(self, measurements_list):
+    def __init__(self, measurements_list, documents):
         super().__init__()
 
 
@@ -29,6 +30,18 @@ class LineGraphWindow(QMainWindow):
         self.main_layout.addLayout(self.left_layout)
         self.main_layout.addLayout(self.right_layout)
 
+        ######################## table model
+        self.table_model1 = MeasurementTableModel(self, documents)
+        self.table_view1 = QTableView()
+        self.table_view1.setModel(self.table_model1)
+        self.table_view1.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table_view1.horizontalHeader().setVisible(True)
+        self.table_view1.verticalHeader().setVisible(True)
+        self.table_view1.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_view1.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_view1.doubleClicked.connect(self.highlight_plot)
+        self.right_layout.addWidget(self.table_view1)
+
         ######################## specify widgets
         self.window = QWidget()
         self.window.setLayout(self.main_layout)
@@ -45,17 +58,35 @@ class LineGraphWindow(QMainWindow):
         self.graph_widget.addLegend(True)
         self.left_layout.addWidget(self.graph_widget)
         
-        self.display_graph(measurements_list)
+        self.display_graph(measurements_list, documents)
 
-    def display_graph(self, measurements_list):
-        for i, measurement in enumerate(measurements_list):
-            x = [float(point[1]) for point in measurement]
-            y = [float(point[2]) for point in measurement] # something here might not be working
-            name = measurement[0][0]
-            pen = pg.mkPen(color=(i, len(measurements_list)), width=2)
-            self.graph_widget.plot(x, y, pen=pen, name=name+str(i+1))
+    def display_graph(self, measurements_list, documents):
 
+        self.graph_widget.clear()
+        self.table_model1.update_data(documents)
 
+        for i, document in enumerate(documents.values()):
+            entry_id = document["_id"]
+            measurements = document["measurements"]
+            x = [float(point[1]) for point in measurements]
+            y = [float(point[2]) for point in measurements]
+            pen = pg.mkPen(color=i, width=2)  # Default pen for all plots
+            self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
+
+    def highlight_plot(self, selected):
+        # Reset all plot items to their original color
+        for i, item in enumerate(self.graph_widget.getPlotItem().listDataItems()):
+            item.setPen(pg.mkPen(color=i , width=2))
+
+        # Highlight the selected plot items
+        indexes = selected.indexes() if isinstance(selected, QItemSelection) else [selected]
+        for index in indexes:
+            row = index.row()
+            entry_id, _ = self.table_model1._data[row]
+            for item in self.graph_widget.getPlotItem().listDataItems():
+                if item.name() == entry_id:
+                    item.setPen(pg.mkPen(color='m', width=4))  # Highlight matching plot
+                    break  
 
 # if __name__ == "__main__":
 #     list = []

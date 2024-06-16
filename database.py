@@ -1,5 +1,6 @@
 import pymongo
 import credentials as cr
+from bson.objectid import ObjectId
 
 client = pymongo.MongoClient(f"mongodb+srv://{cr.USER_NAME}:{cr.PASSWORD}{cr.MONGO_URL[0]}")
 
@@ -17,3 +18,12 @@ def list_collections(database_name):
 # function for finding documents in database
 def find_documents(database, collection, query):
     return list(client[database][collection].find(query))
+
+# function for fetching measurements data based on object ids
+def get_measurements(entry_ids, database, collection):
+    measurements = []
+    for entry_id in entry_ids:
+        object_id = ObjectId(entry_id)
+        document = client[database][collection].find_one({"_id": object_id})
+        measurements.append(document["measurements"])
+    return measurements

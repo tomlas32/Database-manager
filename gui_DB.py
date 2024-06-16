@@ -155,7 +155,6 @@ class DatabaseManager(QMainWindow):
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
             documents = self.search_database(query)
-            #data = db.transform_documents(documents)
 
             if documents:
                 #table_model = QStandardItemModel()

@@ -38,7 +38,7 @@ class LineGraphWindow(QMainWindow):
         self.graph_widget = pg.PlotWidget()
         self.graph_widget.setBackground("#000000")
         self.graph_widget.setLabel("left", "Value")
-        self.graph_widget.setLabel("bottom", "Time")
+        self.graph_widget.setLabel("bottom", "Time (s)")
         self.graph_widget.showGrid(True, True)
         self.graph_widget.setMouseEnabled(x=True, y=False)
         self.graph_widget.setClipToView(True)

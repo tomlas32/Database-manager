@@ -195,8 +195,8 @@ class DatabaseManager(QMainWindow):
     def open_graph_window(self):
 
         entry_ids = self.get_entry_ids()
-        measurements_list = self.get_docs_measurements(entry_ids)        
-        self.graph_window = LineGraphWindow(measurements_list)
+        measurements_list, documents = self.get_docs_measurements(entry_ids)        
+        self.graph_window = LineGraphWindow(measurements_list, documents)
         self.graph_window.show()
 
     # function for getting entry_Ids
@@ -218,7 +218,7 @@ class DatabaseManager(QMainWindow):
     def get_docs_measurements(self, entry_ids):
         db_name = self.db_input.currentText()
         collection_name = self.collection_input.currentText()
-        measurements_list, _ = db.get_measurements(entry_ids, db_name, collection_name)
+        measurements_list, documents = db.get_measurements(entry_ids, db_name, collection_name)
 
-        return measurements_list
+        return measurements_list, documents
 

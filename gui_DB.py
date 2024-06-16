@@ -87,7 +87,6 @@ class DatabaseManager(QMainWindow):
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
         self.table_model = QStandardItemModel()
-        self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table_view.doubleClicked.connect(self.open_graph_window)
         self.result_layout.addWidget(self.table_view)
 

@@ -195,26 +195,32 @@ class DatabaseManager(QMainWindow):
     
     # function for visualizing data based on user choice from table view
     def open_graph_window(self):
-        selected_rows = set()
 
+        entry_ids = self.get_entry_ids()
+        measurements_list = self.get_docs_measurements(entry_ids)        
+        self.graph_window = LineGraphWindow(measurements_list)
+        self.graph_window.show()
+
+    # function for getting entry_Ids
+    def get_entry_ids(self):
+        selected_rows = set()
+        entry_ids = []
         for index in self.table_view.selectedIndexes():
             selected_rows.add(index.row())
-
-        entry_ids = []
-
         for row in selected_rows:
             id_index = self.table_model.index(row, 0)
             row_data = self.table_model.itemFromIndex(id_index).text()
-
             if row_data:
                 entry_ids.append(row_data)
             else:
-                QMessageBox.warning(self, "Error", "No _id object found.")
-
+                QMessageBox.warning(self, "Error", "No rows selection made.")
+        return entry_ids
+    
+    # function for making query based on user row selection
+    def get_docs_measurements(self, entry_ids):
         db_name = self.db_input.currentText()
         collection_name = self.collection_input.currentText()
-        measurements_list = db.get_measurements(entry_ids, db_name, collection_name)
-        self.graph_window = LineGraphWindow(measurements_list)
-        self.graph_window.show()
-        
+        measurements_list, _ = db.get_measurements(entry_ids, db_name, collection_name)
+
+        return measurements_list
 

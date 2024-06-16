@@ -22,8 +22,10 @@ def find_documents(database, collection, query):
 # function for fetching measurements data based on object ids
 def get_measurements(entry_ids, database, collection):
     measurements = []
+    documents = {}
     for entry_id in entry_ids:
         object_id = ObjectId(entry_id)
         document = client[database][collection].find_one({"_id": object_id})
         measurements.append(document["measurements"])
-    return measurements
+        documents[entry_id] = document
+    return measurements, documents

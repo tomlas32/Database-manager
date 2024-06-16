@@ -87,8 +87,8 @@ class DatabaseManager(QMainWindow):
         self.table_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.table_view.customContextMenuRequested.connect(self.show_context_menu)
         self.table_model = QStandardItemModel()
-        #self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
-        #self.table_view.mousePressEvent
+        self.table_view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table_view.doubleClicked.connect(self.open_graph_window)
         self.result_layout.addWidget(self.table_view)
 
         # create buttons and add to the corresponding layout
@@ -195,10 +195,26 @@ class DatabaseManager(QMainWindow):
     
     # function for visualizing data based on user choice from table view
     def open_graph_window(self):
-        selected_indexes = self.table_view.selectedIndexes()
+        selected_rows = set()
+
+        for index in self.table_view.selectedIndexes():
+            selected_rows.add(index.row())
+
         entry_ids = []
 
-        for index in selected_indexes:
-            raw_data = self.table_model.itemFromIndex(index).data()
+        for row in selected_rows:
+            id_index = self.table_model.index(row, 0)
+            row_data = self.table_model.itemFromIndex(id_index).text()
+
+            if row_data:
+                entry_ids.append(row_data)
+            else:
+                QMessageBox.warning(self, "Error", "No _id object found.")
+
+        db_name = self.db_input.currentText()
+        collection_name = self.collection_input.currentText()
+        measurements_list = db.get_measurements(entry_ids, db_name, collection_name)
+        self.graph_window = LineGraphWindow(measurements_list)
+        self.graph_window.show()
         
 

@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QTableView
 from PyQt5.QtCore import Qt, QModelIndex, QAbstractTableModel
 
 class MeasurementTableModel(QAbstractTableModel):

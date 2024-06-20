@@ -90,6 +90,7 @@ class DatabaseManager(QMainWindow):
 
         # create buttons and add to the corresponding layout
         self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.open_graph_window)
         self.export_button = QPushButton("Export")
         self.clear_button = QPushButton("Clear")
         self.buttons_layout.addWidget(self.ok_button)

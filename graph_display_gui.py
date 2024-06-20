@@ -1,20 +1,16 @@
-import numpy as np
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt, QItemSelection
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel, QLineEdit
-from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAbstractItemView, QMenu, QAction, QApplication, QHeaderView
-from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
-import credentials as cr
-import database as db
-import sys
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QTableView, QAbstractItemView
+from PyQt5.QtGui import QIcon
 import pyqtgraph as pg
 from data_models import MeasurementTableModel
+import xlsxwriter
 
 
 class LineGraphWindow(QMainWindow):
     def __init__(self, measurements_list, documents):
         super().__init__()
-
 
         ######################## specify basic resources
         data_icon = QIcon(".\\assets\\graph.ico")
@@ -22,6 +18,7 @@ class LineGraphWindow(QMainWindow):
         self.setWindowTitle("Data Visualization")
         self.setFixedSize(1024, 500)
         self.setWindowIcon(data_icon)
+        self.documents = documents
 
         ######################## specify layouts
         self.main_layout = QHBoxLayout()
@@ -53,6 +50,7 @@ class LineGraphWindow(QMainWindow):
         #### create buttons
         self.export_button = QPushButton("Export")
         self.export_button.setEnabled(True)
+        self.export_button.clicked.connect(self.export_data)
         self.buttons_layout.addWidget(self.export_button)
 
         self.exit_button = QPushButton("Exit")
@@ -97,6 +95,49 @@ class LineGraphWindow(QMainWindow):
             for item in self.graph_widget.getPlotItem().listDataItems():
                 if item.name() == entry_id:
                     item.setPen(pg.mkPen(color='m', width=4))  # Highlight matching plot
-                    break  
-    def get_sensor_data(self, documents):
-        pass               
+                    break
+
+    # function for getting sensor data list per entry_id selected
+    def get_sensor_data(self, documents, selected):
+        sensor_data = {}
+        # Get selected rows from the selection model
+        selected_rows = selected.selectedRows()
+
+        for model_index in selected_rows:
+            # Assuming the entry_id is in the first column
+            entry_id = self.table_model1.data(model_index, Qt.DisplayRole)
+
+            for doc_id, doc in documents.items():
+                if doc_id == entry_id:
+                    sensor_data[entry_id] = doc["pressure_measurements"]
+        return sensor_data
+
+    # function for writing sensor data to xls file
+    def write_to_xlsx(self, sensor_data):
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Excel files (*.xlsx)")
+
+        if not file_name:
+            return  # User canceled the file selection
+        try:
+            workbook = xlsxwriter.Workbook(file_name)
+            for entry_id, data in sensor_data.items():
+                worksheet = workbook.add_worksheet(str(entry_id))  # Name the sheet with the entry_id
+                # Write header row
+                worksheet.write_row(0, 0, ["Sensor", "Time", "Value"])  # Assuming your data has these columns
+                # Write data rows (starting from row 1)
+                for row_num, point in enumerate(data, start=1):  # Start from row 1
+                    worksheet.write_row(row_num, 0, point)
+            workbook.close()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while saving the file:\n{e}", QMessageBox.Ok)
+            return  # Exit the function on error
+    
+    # helper function for exporting data into xslx format
+    def export_data(self):
+        """Handles the complete export process."""
+        selected = self.table_view1.selectionModel()
+        if selected.hasSelection():
+            sensor_data = self.get_sensor_data(self.documents, selected)  # Use self.documents directly
+            self.write_to_xlsx(sensor_data)
+        else:
+            QMessageBox.information(self, "Information", "Please select rows to export.", QMessageBox.Ok)

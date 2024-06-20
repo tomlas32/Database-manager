@@ -159,7 +159,7 @@ class DatabaseManager(QMainWindow):
             if documents:
                 #table_model = QStandardItemModel()
                 headers = list(documents[0].keys())
-                headers.remove("measurements")
+                headers.remove("pressure_measurements")
                 self.table_model.setHorizontalHeaderLabels(headers)
                 for document in documents:
                     row = []

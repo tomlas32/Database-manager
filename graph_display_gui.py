@@ -67,7 +67,7 @@ class LineGraphWindow(QMainWindow):
 
         for i, document in enumerate(documents.values()):
             entry_id = document["_id"]
-            measurements = document["measurements"]
+            measurements = document["pressure_measurements"]
             x = [float(point[1]) for point in measurements]
             y = [float(point[2]) for point in measurements]
             pen = pg.mkPen(color=i, width=2)  # Default pen for all plots

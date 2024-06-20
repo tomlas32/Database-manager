@@ -2,7 +2,7 @@ import pymongo
 import credentials as cr
 from bson.objectid import ObjectId
 
-client = pymongo.MongoClient(f"mongodb+srv://{cr.USER_NAME}:{cr.PASSWORD}{cr.MONGO_URL[0]}")
+client = pymongo.MongoClient(f"mongodb://{cr.USER_NAME}:{cr.PASSWORD}{cr.MONGO_URL[0]}")
 
 # function for fetching available databases
 def get_database():
@@ -26,6 +26,6 @@ def get_measurements(entry_ids, database, collection):
     for entry_id in entry_ids:
         object_id = ObjectId(entry_id)
         document = client[database][collection].find_one({"_id": object_id})
-        measurements.append(document["measurements"])
+        measurements.append(document["pressure_measurements"])
         documents[entry_id] = document
     return measurements, documents

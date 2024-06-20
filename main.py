@@ -4,7 +4,6 @@ import sys
 
 
 
-
 if __name__ == "__main__":
     application = QApplication(sys.argv)                                                            # creates instance of QApplication
     main_window = DatabaseManager()

@@ -17,7 +17,7 @@ class LineGraphWindow(QMainWindow):
 
 
         ######################## specify basic resources
-        data_icon = QIcon("D:\Projects\Work projects\Database-manager\\assets\graph.ico")
+        data_icon = QIcon(".\\assets\\graph.ico")
 
         self.setWindowTitle("Data Visualization")
         self.setFixedSize(1024, 500)
@@ -27,8 +27,12 @@ class LineGraphWindow(QMainWindow):
         self.main_layout = QHBoxLayout()
         self.left_layout = QVBoxLayout()
         self.right_layout = QVBoxLayout()
+        self.table_view_layout = QVBoxLayout()
+        self.buttons_layout = QHBoxLayout()
         self.main_layout.addLayout(self.left_layout)
         self.main_layout.addLayout(self.right_layout)
+        self.right_layout.addLayout(self.table_view_layout)
+        self.right_layout.addLayout(self.buttons_layout)
 
         ######################## table model
         self.table_model1 = MeasurementTableModel(self, documents)
@@ -40,12 +44,20 @@ class LineGraphWindow(QMainWindow):
         self.table_view1.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view1.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view1.doubleClicked.connect(self.highlight_plot)
-        self.right_layout.addWidget(self.table_view1)
+        self.table_view_layout.addWidget(self.table_view1)
 
         ######################## specify widgets
         self.window = QWidget()
         self.window.setLayout(self.main_layout)
         self.setCentralWidget(self.window)
+        #### create buttons
+        self.export_button = QPushButton("Export")
+        self.export_button.setEnabled(True)
+        self.buttons_layout.addWidget(self.export_button)
+
+        self.exit_button = QPushButton("Exit")
+        self.exit_button.setEnabled(True)
+        self.buttons_layout.addWidget(self.exit_button)
 
         ######################## configure plotting area
         self.graph_widget = pg.PlotWidget()
@@ -55,7 +67,6 @@ class LineGraphWindow(QMainWindow):
         self.graph_widget.showGrid(True, True)
         self.graph_widget.setMouseEnabled(x=True, y=False)
         self.graph_widget.setClipToView(True)
-        self.graph_widget.addLegend(True)
         self.left_layout.addWidget(self.graph_widget)
         
         self.display_graph(measurements_list, documents)
@@ -87,10 +98,5 @@ class LineGraphWindow(QMainWindow):
                 if item.name() == entry_id:
                     item.setPen(pg.mkPen(color='m', width=4))  # Highlight matching plot
                     break  
-
-# if __name__ == "__main__":
-#     list = []
-#     application = QApplication(sys.argv)                                                            # creates instance of QApplication
-#     viewer_window = LineGraphWindow(list)
-#     viewer_window.show()
-#     sys.exit(application.exec_())
+    def get_sensor_data(self, documents):
+        pass               

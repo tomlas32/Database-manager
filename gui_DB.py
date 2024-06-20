@@ -14,12 +14,12 @@ class DatabaseManager(QMainWindow):
 
 
         ######################## specify basic resources
-        main_icon = QIcon("D:\Projects\Work projects\Database-manager\\assets\main-icon.ico")
+        main_icon = QIcon(".\\assets\\main-icon.ico")
         
         ######################## specify basic main window configurations
         self.setWindowTitle("Database Manager")
         self.setWindowIcon(main_icon)
-        self.setFixedSize(1024, 500)
+        self.setFixedSize(900, 500)
 
         ######################## specify layouts
         self.main_layout = QVBoxLayout()
@@ -49,14 +49,14 @@ class DatabaseManager(QMainWindow):
         # create db widgets and add to layouts
         self.url_label = QLabel("Database URL:")
         self.url_input = QComboBox()
-        self.url_input.setFixedWidth(500)
+        self.url_input.setFixedWidth(350)
         self.url_input.addItems(cr.MONGO_URL)
         self.db_label = QLabel("Database:")
         self.db_input = QComboBox()
         self.db_input.setFixedWidth(140)
         self.collection_label = QLabel("Collection:")
         self.collection_input = QComboBox()
-        self.collection_input.setFixedWidth(150)
+        self.collection_input.setFixedWidth(170)
         self.db_layout.addWidget(self.url_label)
         self.db_layout.addWidget(self.url_input)
         self.db_layout.addWidget(self.db_label)
@@ -79,7 +79,7 @@ class DatabaseManager(QMainWindow):
 
         # create table view widget and add to the corresponding layout
         self.table_view = QTableView()
-        self.table_view.setFixedWidth(1000)
+        self.table_view.setFixedWidth(860)
         self.table_view.setFixedHeight(270)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -122,23 +122,23 @@ class DatabaseManager(QMainWindow):
         # parse the query string to obtain individual key-value pairs
         query_parts = query_text.split(";")
         query = {}
-        for part in query_parts:
-            if ":" in part:
-                key, value = part.split(":")
-                key = key.strip()
-                values = [v.strip() for v in value.split(",")] # creates a list of values for a given key in case user specified multiple values to search for
+        try:
+            for part in query_parts:
+                if ":" in part:
+                    key, value = part.split(":")
+                    key = key.strip()
+                    values = [v.strip() for v in value.split(",")] # creates a list of values for a given key in case user specified multiple values to search for
 
-                if key in ["test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
-                    try:
+                    if key in ["test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
                         values = [str(v) for v in values]
-                    except ValueError:
-                        continue
-                    if len(values) > 1: # if user specified multiple values and we dealing with a list
-                        query[key] = {"$in": values}
-                    else:
-                        query[key] = values[0]
-        return query
-    
+                        if len(values) > 1: # if user specified multiple values and we dealing with a list
+                            query[key] = {"$in": values}
+                        else:
+                            query[key] = values[0]
+            return query
+        except ValueError:
+            return None
+        
     # function to search database based on given query 
     def search_database(self, query):
         db_name = self.db_input.currentText()
@@ -155,23 +155,25 @@ class DatabaseManager(QMainWindow):
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
             documents = self.search_database(query)
-
-            if documents:
-                #table_model = QStandardItemModel()
-                headers = list(documents[0].keys())
-                headers.remove("pressure_measurements")
-                self.table_model.setHorizontalHeaderLabels(headers)
-                for document in documents:
-                    row = []
-                    for key in headers:
-                        item = QStandardItem(str(document[key]))
-                        row.append(item)
-                    self.table_model.appendRow(row)
-                self.table_view.setModel(self.table_model)
-                self.table_view.resizeColumnsToContents()
-                self.table_view.resizeRowsToContents()
-            else:
-                QMessageBox.warning(self, "Current query", "No results found")
+            try:
+                if documents:
+                    #table_model = QStandardItemModel()
+                    headers = list(documents[0].keys())
+                    headers.remove("pressure_measurements")
+                    self.table_model.setHorizontalHeaderLabels(headers)
+                    for document in documents:
+                        row = []
+                        for key in headers:
+                            item = QStandardItem(str(document[key]))
+                            row.append(item)
+                        self.table_model.appendRow(row)
+                    self.table_view.setModel(self.table_model)
+                    self.table_view.resizeColumnsToContents()
+                    self.table_view.resizeRowsToContents()
+                else:
+                    QMessageBox.warning(self, "Current query", "No results found")
+            except ValueError:
+                QMessageBox.warning(self, "Current query", "Invalid query syntax")
 
     # function defining context menu 
     def show_context_menu(self, point):

@@ -55,6 +55,7 @@ class LineGraphWindow(QMainWindow):
 
         self.exit_button = QPushButton("Exit")
         self.exit_button.setEnabled(True)
+        self.exit_button.clicked.connect(self.close)
         self.buttons_layout.addWidget(self.exit_button)
 
         ######################## configure plotting area
@@ -141,3 +142,7 @@ class LineGraphWindow(QMainWindow):
             self.write_to_xlsx(sensor_data)
         else:
             QMessageBox.information(self, "Information", "Please select rows to export.", QMessageBox.Ok)
+
+    #exit function
+    def close_window(self):
+        self.close()

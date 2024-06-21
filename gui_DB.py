@@ -1,15 +1,19 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QComboBox, QMessageBox, QLabel
 from PyQt5.QtWidgets import QSizePolicy, QSpacerItem, QTextEdit, QTableView, QAbstractItemView, QMenu, QAction, QApplication
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
 from graph_display_gui import LineGraphWindow
+from concurrent.futures import ThreadPoolExecutor
+from database_worker import DatabaseWorker
+from PyQt5.QtTest import QSignalSpy
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        self.search_completed = pyqtSignal(list)
+        
 
         ######################## specify basic resources
         main_icon = QIcon(".\\assets\\main-icon.ico")
@@ -138,41 +142,53 @@ class DatabaseManager(QMainWindow):
         except ValueError:
             return None
         
-    # function to search database based on given query 
-    def search_database(self, query):
-        db_name = self.db_input.currentText()
-        collection_name = self.collection_input.currentText()
-
-        if db_name and collection_name:
-            documents = db.find_documents(db_name, collection_name, query)
-
-        return documents
 
     # helper function for making a database query when search button is clicked
     def on_search_button_clicked(self):
-        self.table_model.clear()
+        self.table_model.clear()  
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
-            documents = self.search_database(query)
+            # Create a worker thread
+            self.worker_thread = QThread()
+            self.worker = DatabaseWorker(query, self.db_input.currentText(), self.collection_input.currentText())
+            self.worker.moveToThread(self.worker_thread)
+            
+            # Connect signals and start the thread
+            self.worker_thread.started.connect(self.worker.run)
+            self.worker.finished.connect(self.worker_thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.worker.finished.connect(self.worker_thread.deleteLater)
+            self.worker.finished.connect(self.handle_search_result)  # Connect without lambda
+            self.worker_thread.start()
+            QApplication.processEvents()
+    
+    # function for updating table view based on database query output
+    def handle_search_result(self, documents):
+        if documents:
             try:
-                if documents:
-                    #table_model = QStandardItemModel()
-                    headers = list(documents[0].keys())
-                    headers.remove("pressure_measurements")
-                    self.table_model.setHorizontalHeaderLabels(headers)
-                    for document in documents:
-                        row = []
-                        for key in headers:
-                            item = QStandardItem(str(document[key]))
-                            row.append(item)
-                        self.table_model.appendRow(row)
-                    self.table_view.setModel(self.table_model)
-                    self.table_view.resizeColumnsToContents()
-                    self.table_view.resizeRowsToContents()
-                else:
-                    QMessageBox.warning(self, "Current query", "No results found")
-            except ValueError:
-                QMessageBox.warning(self, "Current query", "Invalid query syntax")
+                desired_header_order = ["_id", "user_id", "test_date", "test_time", "instrument_id", "cartridge_number", "test_duration"]
+                first_document = documents[0]  # Try to get the first item (assumes it's iterable)
+                all_headers = list(first_document.keys())
+                all_headers.remove("pressure_measurements")
+                headers = [header for header in desired_header_order if header in all_headers]
+                # Add remaining headers alphabetically
+                remaining_headers = sorted(set(all_headers) - set(headers))  
+                headers.extend(remaining_headers)
+
+                self.table_model.setHorizontalHeaderLabels(headers)
+                # Add all documents including the first one
+                for document in documents:
+                    row = [QStandardItem(str(document.get(key, ""))) for key in headers]  # Handle missing keys
+                    self.table_model.appendRow(row)
+                    
+            except (TypeError, StopIteration):  # Handle cases where 'documents' is not iterable or empty
+                QMessageBox.warning(self, "Current query", "No results found or invalid data format.")
+        else:
+            QMessageBox.warning(self, "Current query", "No results found")
+
+        self.table_view.setModel(self.table_model)
+        self.table_view.resizeColumnsToContents()
+        self.table_view.resizeRowsToContents()
 
     # function defining context menu 
     def show_context_menu(self, point):

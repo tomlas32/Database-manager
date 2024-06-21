@@ -17,7 +17,7 @@ def list_collections(database_name):
 
 # function for finding documents in database
 def find_documents(database, collection, query):
-    return list(client[database][collection].find(query))
+    return client[database][collection].find(query)
 
 # function for fetching measurements data based on object ids
 def get_measurements(entry_ids, database, collection):

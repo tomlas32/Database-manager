@@ -5,16 +5,15 @@ from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 import credentials as cr
 import database as db
 from graph_display_gui import LineGraphWindow
-from concurrent.futures import ThreadPoolExecutor
 from database_worker import DatabaseWorker
 from PyQt5.QtTest import QSignalSpy
+from waiting_spinner import WaitingSpinner
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
         super().__init__()
         self.search_completed = pyqtSignal(list)
         
-
         ######################## specify basic resources
         main_icon = QIcon(".\\assets\\main-icon.ico")
         
@@ -36,6 +35,7 @@ class DatabaseManager(QMainWindow):
         self.spacer_2 = QSpacerItem(800, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.spacer_3 = QSpacerItem(800, 50, QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.spacer_4 = QSpacerItem(800, 50, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.spacer_5 = QSpacerItem(20, 30, QSizePolicy.Fixed, QSizePolicy.Fixed)
         # main widget and layouts
         self.window = QWidget()
         self.window.setLayout(self.main_layout)
@@ -77,6 +77,10 @@ class DatabaseManager(QMainWindow):
         self.query_layout.addWidget(self.query_label)
         self.query_layout.addWidget(self.query_input)
         self.query_layout.addWidget(self.query_button)
+        self.query_layout.addSpacerItem(self.spacer_5)
+        self.spinner = WaitingSpinner(self.query_button, True) # Set roundness to True for circle
+        self.query_layout.addWidget(self.spinner)
+        self.spinner.hide() 
         self.query_layout.addStretch(1)
 
         # create table view widget and add to the corresponding layout
@@ -148,6 +152,11 @@ class DatabaseManager(QMainWindow):
         self.table_model.clear()  
         if len(self.query_input.toPlainText()) > 0:
             query = self.create_query()
+
+            # Disable the search button and show the spinner
+            self.query_button.setEnabled(False)
+            self.spinner.start()
+
             # Create a worker thread
             self.worker_thread = QThread()
             self.worker = DatabaseWorker(query, self.db_input.currentText(), self.collection_input.currentText())
@@ -158,7 +167,7 @@ class DatabaseManager(QMainWindow):
             self.worker.finished.connect(self.worker_thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
             self.worker.finished.connect(self.worker_thread.deleteLater)
-            self.worker.finished.connect(self.handle_search_result)  # Connect without lambda
+            self.worker.finished.connect(self.handle_search_result)
             self.worker_thread.start()
             QApplication.processEvents()
     
@@ -180,7 +189,10 @@ class DatabaseManager(QMainWindow):
                 for document in documents:
                     row = [QStandardItem(str(document.get(key, ""))) for key in headers]  # Handle missing keys
                     self.table_model.appendRow(row)
-                    
+                
+                self.query_button.setEnabled(True)
+                self.spinner.stop()
+
             except (TypeError, StopIteration):  # Handle cases where 'documents' is not iterable or empty
                 QMessageBox.warning(self, "Current query", "No results found or invalid data format.")
         else:

@@ -8,11 +8,13 @@ from graph_display_gui import LineGraphWindow
 from database_worker import DatabaseWorker
 from PyQt5.QtTest import QSignalSpy
 from waiting_spinner import WaitingSpinner
+from bson.objectid import ObjectId
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
         super().__init__()
         self.search_completed = pyqtSignal(list)
+        self.worker_thread = None
         
         ######################## specify basic resources
         main_icon = QIcon(".\\assets\\main-icon.ico")
@@ -136,8 +138,8 @@ class DatabaseManager(QMainWindow):
                     key = key.strip()
                     values = [v.strip() for v in value.split(",")] # creates a list of values for a given key in case user specified multiple values to search for
 
-                    if key in ["test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
-                        values = [str(v) for v in values]
+                    if key in ["_id", "test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
+                        values = [ObjectId(v) if key == "_id" else str(v) for v in values]
                         if len(values) > 1: # if user specified multiple values and we dealing with a list
                             query[key] = {"$in": values}
                         else:
@@ -156,19 +158,25 @@ class DatabaseManager(QMainWindow):
             # Disable the search button and show the spinner
             self.query_button.setEnabled(False)
             self.spinner.start()
-
-            # Create a worker thread
+            try:
+                if self.worker_thread is not None and self.worker_thread.isRunning():
+                    # If a previous thread is running, wait for it to finish
+                    self.worker_thread.quit()
+                    self.worker_thread.wait()
+            except RuntimeError:
+                pass
             self.worker_thread = QThread()
             self.worker = DatabaseWorker(query, self.db_input.currentText(), self.collection_input.currentText())
             self.worker.moveToThread(self.worker_thread)
-            
+
             # Connect signals and start the thread
             self.worker_thread.started.connect(self.worker.run)
             self.worker.finished.connect(self.worker_thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
-            self.worker.finished.connect(self.worker_thread.deleteLater)
-            self.worker.finished.connect(self.handle_search_result)
+            self.worker.finished.connect(self.handle_search_result)  # Connect directly
+            self.worker.finished.connect(self.reset_worker_thread)  # New method
             self.worker_thread.start()
+
             QApplication.processEvents()
     
     # function for updating table view based on database query output
@@ -195,13 +203,21 @@ class DatabaseManager(QMainWindow):
 
             except (TypeError, StopIteration):  # Handle cases where 'documents' is not iterable or empty
                 QMessageBox.warning(self, "Current query", "No results found or invalid data format.")
+                self.query_button.setEnabled(True)
+                self.spinner.stop()
         else:
             QMessageBox.warning(self, "Current query", "No results found")
+            self.query_button.setEnabled(True)
+            self.spinner.stop()
 
         self.table_view.setModel(self.table_model)
         self.table_view.resizeColumnsToContents()
         self.table_view.resizeRowsToContents()
 
+    def reset_worker_thread(self):
+        self.worker_thread.deleteLater()  # Delete the thread after it's finished
+        self.worker_thread = None  # Reset the reference
+    
     # function defining context menu 
     def show_context_menu(self, point):
         menu = QMenu(self)

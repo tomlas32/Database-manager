@@ -186,7 +186,10 @@ class DatabaseManager(QMainWindow):
                 desired_header_order = ["_id", "user_id", "test_date", "test_time", "instrument_id", "cartridge_number", "test_duration"]
                 first_document = documents[0]  # Try to get the first item (assumes it's iterable)
                 all_headers = list(first_document.keys())
-                all_headers.remove("pressure_measurements")
+                if "pressure_measurement" in all_headers:
+                    all_headers.remove("pressure_measurements")
+                elif "temp_measurements" in all_headers:
+                    all_headers.remove("temp_measurements")
                 headers = [header for header in desired_header_order if header in all_headers]
                 # Add remaining headers alphabetically
                 remaining_headers = sorted(set(all_headers) - set(headers))  

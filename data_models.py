@@ -14,7 +14,7 @@ class MeasurementTableModel(QAbstractTableModel):
         return len(self._data)
 
     def columnCount(self, parent=QModelIndex()):
-        return 4  # Consistent with your header count
+        return 6  # Consistent with your header count
 
     def data(self, index, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
@@ -30,7 +30,11 @@ class MeasurementTableModel(QAbstractTableModel):
                 return document.get("test_date", "") 
             elif col == 3:
                 return document.get("instrument_id", "")
+            elif col == 4:
+                return document.get("cartridge_number", "")
+            elif col == 5:
+                return document.get("protocol", "")
     
     def headerData(self, section, orientation, role=Qt.DisplayRole): 
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ["_id", "User ID", "Test Date", "Instrument"][section]
+            return ["_id", "User ID", "Test Date", "Instrument", "Cartridge No.", "Protocol script"][section]

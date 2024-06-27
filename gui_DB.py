@@ -138,7 +138,7 @@ class DatabaseManager(QMainWindow):
                     key = key.strip()
                     values = [v.strip() for v in value.split(",")] # creates a list of values for a given key in case user specified multiple values to search for
 
-                    if key in ["_id", "test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number"]:
+                    if key in ["_id", "test_date", "test_time", "user_id", "instrument_id", "experiment_name", "cartridge_number", "protocol", "sensor_type"]:
                         values = [ObjectId(v) if key == "_id" else str(v) for v in values]
                         if len(values) > 1: # if user specified multiple values and we dealing with a list
                             query[key] = {"$in": values}
@@ -183,7 +183,7 @@ class DatabaseManager(QMainWindow):
     def handle_search_result(self, documents):
         if documents:
             try:
-                desired_header_order = ["_id", "user_id", "test_date", "test_time", "instrument_id", "cartridge_number", "test_duration"]
+                desired_header_order = ["_id", "user_id", "test_date", "test_time", "instrument_id", "cartridge_number", "test_duration", "protocol"]
                 first_document = documents[0]  # Try to get the first item (assumes it's iterable)
                 all_headers = list(first_document.keys())
                 if "pressure_measurements" in all_headers:

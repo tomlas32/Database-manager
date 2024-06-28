@@ -77,11 +77,25 @@ class LineGraphWindow(QMainWindow):
 
         for i, document in enumerate(documents.values()):
             entry_id = document["_id"]
-            measurements = document["pressure_measurements"]
-            x = [float(point[1]) for point in measurements]
-            y = [float(point[2]) for point in measurements]
-            pen = pg.mkPen(color=i, width=2)  # Default pen for all plots
-            self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
+            line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine]
+
+            if "pressure_measurements" in document and document["pressure_meanurements"]:
+                measurements = document["pressure_measurements"]
+                x = [float(point[1]) for point in measurements]
+                y = [float(point[2]) for point in measurements]
+                pen = pg.mkPen(color=i, width=2)  # Default pen for all plots
+                self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
+            elif "temp_measurements" in document and document["temp_measurements"]:
+                measurements = document["temp_measurements"]
+                for channel, data in measurements.items():
+                    if data:
+                        x = [float(point[0]) for point in data]
+                        y = [float(point[1]) for point in data]
+                        line_style = line_styles.pop()
+                        pen = pg.mkPen(color=i, style=line_style, width=2)  # Default pen for all plots
+                        self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
+
+
 
     def highlight_plot(self, selected):
         # Reset all plot items to their original color
@@ -110,7 +124,10 @@ class LineGraphWindow(QMainWindow):
 
             for doc_id, doc in documents.items():
                 if doc_id == entry_id:
-                    sensor_data[entry_id] = doc["pressure_measurements"]
+                    if "pressure_measurements" in doc and doc["pressure_measurements"]:
+                        sensor_data[entry_id] = doc["pressure_measurements"]
+                    elif "temp_measurements" in doc and doc["temp_measurements"]:
+                        sensor_data[entry_id] = doc["temp_measurements"]
         return sensor_data
 
     # function for writing sensor data to xls file

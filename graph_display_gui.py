@@ -153,7 +153,7 @@ class LineGraphWindow(QMainWindow):
                     num_rows = len(data[channels[0]]) 
                     for row_num in range(num_rows):
                         row_data = [data[ch][row_num][0] for ch in channels]  # Get time for each channel
-                        values = [data[ch][row_num][1] for ch in channels]    # Get value for each channel
+                        values = [data[ch][row_num][1] for ch in channels]    # Get temp value for each channel
                         row_data = [row_data[0]] + values                     # Combine time and values
                         worksheet.write_row(row_num + 1, 0, row_data)
 

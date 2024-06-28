@@ -79,7 +79,7 @@ class LineGraphWindow(QMainWindow):
             entry_id = document["_id"]
             line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine]
 
-            if "pressure_measurements" in document and document["pressure_meanurements"]:
+            if "pressure_measurements" in document and document["pressure_measurements"]:
                 measurements = document["pressure_measurements"]
                 x = [float(point[1]) for point in measurements]
                 y = [float(point[2]) for point in measurements]
@@ -140,11 +140,23 @@ class LineGraphWindow(QMainWindow):
             workbook = xlsxwriter.Workbook(file_name)
             for entry_id, data in sensor_data.items():
                 worksheet = workbook.add_worksheet(str(entry_id))  # Name the sheet with the entry_id
-                # Write header row
-                worksheet.write_row(0, 0, ["Sensor", "Time", "Value"])  # Assuming your data has these columns
-                # Write data rows (starting from row 1)
-                for row_num, point in enumerate(data, start=1):  # Start from row 1
-                    worksheet.write_row(row_num, 0, point)
+                if isinstance(data, list):  
+                    # Write header row
+                    worksheet.write_row(0, 0, ["Sensor", "Time", "Value"])  # Assuming your data has these columns
+                    # Write data rows (starting from row 1)
+                    for row_num, point in enumerate(data, start=1):  # Start from row 1
+                        worksheet.write_row(row_num, 0, point)
+                elif isinstance(data, dict):
+                    channels = list(data.keys())             # Get all channel names
+                    header = ["Time"] + channels
+                    worksheet.write_row(0, 0, header)
+                    num_rows = len(data[channels[0]]) 
+                    for row_num in range(num_rows):
+                        row_data = [data[ch][row_num][0] for ch in channels]  # Get time for each channel
+                        values = [data[ch][row_num][1] for ch in channels]    # Get value for each channel
+                        row_data = [row_data[0]] + values                     # Combine time and values
+                        worksheet.write_row(row_num + 1, 0, row_data)
+
             workbook.close()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"An error occurred while saving the file:\n{e}", QMessageBox.Ok)

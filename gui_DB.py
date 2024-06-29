@@ -6,9 +6,10 @@ import credentials as cr
 import database as db
 from graph_display_gui import LineGraphWindow
 from database_worker import DatabaseWorker
-from PyQt5.QtTest import QSignalSpy
 from waiting_spinner import WaitingSpinner
 from bson.objectid import ObjectId
+import xlsxwriter
+import copy
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
@@ -102,6 +103,7 @@ class DatabaseManager(QMainWindow):
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.open_graph_window)
         self.export_button = QPushButton("Export")
+        self.export_button.clicked.connect(self.export_to_xlsx)
         self.clear_button = QPushButton("Clear")
         self.buttons_layout.addWidget(self.ok_button)
         self.buttons_layout.addWidget(self.export_button)
@@ -269,4 +271,58 @@ class DatabaseManager(QMainWindow):
         measurements_list, documents = db.get_measurements(entry_ids, db_name, collection_name)
 
         return measurements_list, documents
+    
+    def export_to_xlsx(self):
+        try:
+            entry_ids = self.get_entry_ids()
+            _, documents = self.get_docs_measurements(entry_ids)
+            sensor_data = self.get_sensor_data(documents)
+            self.write_to_xlsx(sensor_data)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while exporting the data:\n{e}", QMessageBox.Ok)
+            return  # Exit the function on error
+
+    # function for getting sensor data list per entry_id selected
+    def get_sensor_data(self, documents):
+        sensor_data = {}
+        for entry_id, doc in documents.items():
+            if "pressure_measurements" in doc:
+                sensor_data[entry_id] = doc["pressure_measurements"]
+            elif "temp_measurements" in doc:
+                sensor_data[entry_id] = doc["temp_measurements"]
+
+        return sensor_data
+    
+    # function for writing sensor data to xls file
+    def write_to_xlsx(self, sensor_data):
+        file_name, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Excel files (*.xlsx)")
+        if not file_name:
+            return  # User canceled the file selection
+        try:
+            workbook = xlsxwriter.Workbook(file_name)
+            for entry_id, data in sensor_data.items():
+                worksheet = workbook.add_worksheet(str(entry_id))  # Name the sheet with the entry_id
+                if isinstance(data, list):  
+                    # Write header row
+                    worksheet.write_row(0, 0, ["Sensor", "Time", "Value"])  # Assuming your data has these columns
+                    # Write data rows (starting from row 1)
+                    for row_num, point in enumerate(data, start=1):  # Start from row 1
+                        worksheet.write_row(row_num, 0, point)
+                elif isinstance(data, dict):
+                    channels = list(data.keys())             # Get all channel names
+                    header = ["Time"] + channels
+                    worksheet.write_row(0, 0, header)
+                    num_rows = len(data[channels[0]]) 
+                    for row_num in range(num_rows):
+                        row_data = [data[ch][row_num][0] for ch in channels]  # Get time for each channel
+                        values = [data[ch][row_num][1] for ch in channels]    # Get temp value for each channel
+                        row_data = [row_data[0]] + values                     # Combine time and values
+                        worksheet.write_row(row_num + 1, 0, row_data)
+
+            workbook.close()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while saving the file:\n{e}", QMessageBox.Ok)
+            return  # Exit the function on error
+
+
 

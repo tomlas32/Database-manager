@@ -77,7 +77,7 @@ class LineGraphWindow(QMainWindow):
 
         for i, document in enumerate(documents.values()):
             entry_id = document["_id"]
-            line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotLine]
+            line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotDotLine]
 
             if "pressure_measurements" in document and document["pressure_measurements"]:
                 measurements = document["pressure_measurements"]
@@ -113,21 +113,14 @@ class LineGraphWindow(QMainWindow):
                     break
 
     # function for getting sensor data list per entry_id selected
-    def get_sensor_data(self, documents, selected):
+    def get_sensor_data(self, documents):
         sensor_data = {}
-        # Get selected rows from the selection model
-        selected_rows = selected.selectedRows()
+        for entry_id, doc in documents.items():
+            if "pressure_measurements" in doc:
+                sensor_data[entry_id] = doc["pressure_measurements"]
+            elif "temp_measurements" in doc:
+                sensor_data[entry_id] = doc["temp_measurements"]
 
-        for model_index in selected_rows:
-            # Assuming the entry_id is in the first column
-            entry_id = self.table_model1.data(model_index, Qt.DisplayRole)
-
-            for doc_id, doc in documents.items():
-                if doc_id == entry_id:
-                    if "pressure_measurements" in doc and doc["pressure_measurements"]:
-                        sensor_data[entry_id] = doc["pressure_measurements"]
-                    elif "temp_measurements" in doc and doc["temp_measurements"]:
-                        sensor_data[entry_id] = doc["temp_measurements"]
         return sensor_data
 
     # function for writing sensor data to xls file
@@ -164,13 +157,12 @@ class LineGraphWindow(QMainWindow):
     
     # helper function for exporting data into xslx format
     def export_data(self):
-        """Handles the complete export process."""
-        selected = self.table_view1.selectionModel()
-        if selected.hasSelection():
-            sensor_data = self.get_sensor_data(self.documents, selected)  # Use self.documents directly
+        try:
+            sensor_data = self.get_sensor_data(self.documents)
             self.write_to_xlsx(sensor_data)
-        else:
-            QMessageBox.information(self, "Information", "Please select rows to export.", QMessageBox.Ok)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while exporting the data:\n{e}", QMessageBox.Ok)
+            return  # Exit the function on error
 
     #exit function
     def close_window(self):

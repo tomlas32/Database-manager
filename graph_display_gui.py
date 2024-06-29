@@ -75,6 +75,13 @@ class LineGraphWindow(QMainWindow):
         self.graph_widget.clear()
         self.table_model1.update_data(documents)
 
+        channel_colors = {  # Define color mapping for each channel
+        "Ch1": pg.mkColor("red"),
+        "Ch2": pg.mkColor("green"),
+        "Ch3": pg.mkColor("blue"),
+        "Ch4": pg.mkColor("yellow")
+        }
+
         for i, document in enumerate(documents.values()):
             entry_id = document["_id"]
             line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotDotLine]
@@ -92,7 +99,7 @@ class LineGraphWindow(QMainWindow):
                         x = [float(point[0]) for point in data]
                         y = [float(point[1]) for point in data]
                         line_style = line_styles.pop()
-                        pen = pg.mkPen(color=i, style=line_style, width=2)  # Default pen for all plots
+                        pen = pg.mkPen(color=channel_colors.get(channel, 'gray'), style=line_style, width=2)  # Default pen for all plots
                         self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
     
     # highlights plots based on user choice from tabel view

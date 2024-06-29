@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QTableView, QAbstractItemView
 from PyQt5.QtGui import QIcon
 import pyqtgraph as pg
 from data_models import MeasurementTableModel
-import xlsxwriter
+import xlsxwriter, os, sys
 
 
 class LineGraphWindow(QMainWindow):
@@ -13,7 +13,7 @@ class LineGraphWindow(QMainWindow):
         super().__init__()
 
         ######################## specify basic resources
-        data_icon = QIcon(".\\assets\\graph.ico")
+        data_icon = QIcon(self.resource_path("assets/graph.ico"))
 
         self.setWindowTitle("Data Visualization")
         self.setFixedSize(1024, 500)
@@ -184,3 +184,12 @@ class LineGraphWindow(QMainWindow):
     #exit function
     def close_window(self):
         self.close()
+    
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS2
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)

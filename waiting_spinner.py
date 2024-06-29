@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt, QSize
 from PyQt5 import QtGui
+import sys, os
 
 class WaitingSpinner(QWidget):
     def __init__(self, parent, centerOnParent=True, disableParentWhenSpinning=False, modality=Qt.NonModal):
@@ -10,7 +11,7 @@ class WaitingSpinner(QWidget):
         self._disableParentWhenSpinning = disableParentWhenSpinning
 
         # Create the movie and label
-        self.movie = QtGui.QMovie("./assets/loading.gif")  # Replace with your spinner GIF path
+        self.movie = QtGui.QMovie(self.resource_path("assets/loading.gif"))  # Replace with your spinner GIF path
         self.movie_label = QLabel(self)
         self.movie_label.setMovie(self.movie)
         self.movie_label.setAlignment(Qt.AlignCenter)
@@ -41,3 +42,12 @@ class WaitingSpinner(QWidget):
         if self.parent and self._disableParentWhenSpinning:
             self.parent.setEnabled(True)
         self.hide()
+    
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS2
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)

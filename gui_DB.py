@@ -8,8 +8,7 @@ from graph_display_gui import LineGraphWindow
 from database_worker import DatabaseWorker
 from waiting_spinner import WaitingSpinner
 from bson.objectid import ObjectId
-import xlsxwriter
-import copy
+import xlsxwriter, os, sys
 
 class DatabaseManager(QMainWindow):
     def __init__(self):
@@ -18,7 +17,7 @@ class DatabaseManager(QMainWindow):
         self.worker_thread = None
         
         ######################## specify basic resources
-        main_icon = QIcon(".\\assets\\main-icon.ico")
+        main_icon = QIcon(self.resource_path("assets/main-icon.ico"))
         
         ######################## specify basic main window configurations
         self.setWindowTitle("Database Manager")
@@ -324,5 +323,13 @@ class DatabaseManager(QMainWindow):
             QMessageBox.critical(self, "Error", f"An error occurred while saving the file:\n{e}", QMessageBox.Ok)
             return  # Exit the function on error
 
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS2
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
 

@@ -185,8 +185,13 @@ class DatabaseManager(QMainWindow):
         if documents:
             try:
                 desired_header_order = ["_id", "user_id", "test_date", "test_time", "instrument_id", "cartridge_number", "test_duration", "protocol"]
-                first_document = documents[0]  # Try to get the first item (assumes it's iterable)
-                all_headers = list(first_document.keys())
+
+                all_headers = set()
+                for document in documents:
+                    all_headers.update(document.keys()) #  this itarates through the docs and gets the keys. set will only add unique values
+                
+                all_headers = list(all_headers)
+
                 if "pressure_measurements" in all_headers:
                     all_headers.remove("pressure_measurements")
                 elif "temp_measurements" in all_headers:
@@ -248,19 +253,19 @@ class DatabaseManager(QMainWindow):
         self.graph_window = LineGraphWindow(measurements_list, documents)
         self.graph_window.show()
 
-    # function for getting entry_Ids
     def get_entry_ids(self):
-        selected_rows = set()
+        selected_rows = {index.row() for index in self.table_view.selectedIndexes()}
+        
+        if not selected_rows:  # Check if any rows are selected
+            QMessageBox.warning(self, "Error", "No rows selected.")
+            return None  # Indicate no valid selection
         entry_ids = []
-        for index in self.table_view.selectedIndexes():
-            selected_rows.add(index.row())
         for row in selected_rows:
             id_index = self.table_model.index(row, 0)
-            row_data = self.table_model.itemFromIndex(id_index).text()
-            if row_data:
-                entry_ids.append(row_data)
-            else:
-                QMessageBox.warning(self, "Error", "No rows selection made.")
+            entry_id = self.table_model.itemFromIndex(id_index).text()  
+            if entry_id: 
+                entry_ids.append(entry_id)
+
         return entry_ids
     
     # function for making query based on user row selection
@@ -272,8 +277,10 @@ class DatabaseManager(QMainWindow):
         return measurements_list, documents
     
     def export_to_xlsx(self):
+        entry_ids = self.get_entry_ids()
+        if entry_ids is None:
+            return
         try:
-            entry_ids = self.get_entry_ids()
             _, documents = self.get_docs_measurements(entry_ids)
             sensor_data = self.get_sensor_data(documents)
             self.write_to_xlsx(sensor_data)

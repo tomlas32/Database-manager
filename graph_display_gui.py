@@ -94,23 +94,33 @@ class LineGraphWindow(QMainWindow):
                         line_style = line_styles.pop()
                         pen = pg.mkPen(color=i, style=line_style, width=2)  # Default pen for all plots
                         self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
-
-
-
+    
+    # highlights plots based on user choice from tabel view
     def highlight_plot(self, selected):
-        # Reset all plot items to their original color
-        for i, item in enumerate(self.graph_widget.getPlotItem().listDataItems()):
-            item.setPen(pg.mkPen(color=i , width=2))
+        # Reset all plot items to their original style (while maintaining original color)
+        for item in self.graph_widget.getPlotItem().listDataItems():
+            original_pen = item.opts['pen']
+            if original_pen.width() == 4: # Check if it's highlighted (only width changed)
+                new_pen = pg.mkPen(
+                    color=original_pen.color(),  # Keep the original color
+                    width=2,  # Reset width back to 2
+                    style=original_pen.style()  # Keep original style
+                )  
+                item.setPen(new_pen)  
 
-        # Highlight the selected plot items
+        # Extract selected entry IDs
         indexes = selected.indexes() if isinstance(selected, QItemSelection) else [selected]
-        for index in indexes:
-            row = index.row()
-            entry_id, _ = self.table_model1._data[row]
-            for item in self.graph_widget.getPlotItem().listDataItems():
-                if item.name() == entry_id:
-                    item.setPen(pg.mkPen(color='m', width=4))  # Highlight matching plot
-                    break
+        selected_entry_ids = [self.table_model1._data[index.row()][0] for index in indexes]
+
+        # Highlight all plots associated with selected entries
+        for item in self.graph_widget.getPlotItem().listDataItems():
+            if item.name() in selected_entry_ids:
+                highlight_pen = pg.mkPen(
+                    color=item.opts['pen'].color(), # Keep the original color
+                    width=4,  # Change width to 4
+                    style=item.opts['pen'].style()  # Keep original style
+                )
+                item.setPen(highlight_pen)
 
     # function for getting sensor data list per entry_id selected
     def get_sensor_data(self, documents):

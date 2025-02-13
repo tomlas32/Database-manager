@@ -1,0 +1,56 @@
+# Database Manager
+
+## Overview
+The **Database Manager** is a user-friendly tool for querying and managing MongoDB databases with an intuitive GUI. The software allows users to select databases and collections dynamically, simplifying the querying process for users unfamiliar with MongoDB syntax.
+
+## Features
+- **Automatic database and collection retrieval** – Select available options from dropdown menus.
+- **Simplified Query Syntax** – No need for MongoDB syntax knowledge; users can query with an easy format.
+- **Multiple Query Selection** – Select multiple results using `Ctrl + Left Click` or double-click to open the visualization window.
+- **Data Visualization** – Quickly generate visual representations of query results.
+- **Export Results** – Save retrieved data for further analysis.
+
+## Installation
+To install the required dependencies, run:
+
+```sh
+pip install -r requirements.txt
+```
+
+## Configuration
+A `credentials.py` file must be created in the project directory, containing the following:
+
+```python
+MONGO_URL = ["@ ip:27017"]  # List of available MongoDB URLs
+USER_NAME = "your_username"
+PASSWORD = "your_password"
+```
+
+## Query Syntax
+The tool supports an intuitive query format:
+- **Multiple values for the same key**: Use commas `,` to separate values.
+- **Multiple keys**: Use semicolons `;` to separate different key-value pairs.
+
+### Example Queries
+```text
+user_id: tomlas,admin; test_date: 2025-02-13
+```
+This query searches for entries where:
+- `user_id` is **tomlas** OR **admin**
+- `test_date` is **2025-02-13**
+
+## Usage
+1. Launch the application and connect to a MongoDB instance.
+2. Select the database and collection from the dropdown menus.
+3. Enter the query using the simplified syntax.
+4. Click **Search** to retrieve results.
+5. Select multiple query results using `Ctrl + Left Click`.
+6. Double-click an entry to open the **Query Visualization Window**.
+
+## Download
+Get the full source code from GitHub:
+
+[**Database Manager on GitHub**](https://github.com/tomlas32/Database-manager)
+
+## License
+This project is licensed under the MIT License.

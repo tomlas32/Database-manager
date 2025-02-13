@@ -16,7 +16,7 @@ class LineGraphWindow(QMainWindow):
         data_icon = QIcon(self.resource_path("assets/graph.ico"))
 
         self.setWindowTitle("Data Visualization")
-        self.setFixedSize(1024, 500)
+        self.setGeometry(100, 100, 1024, 500)
         self.setWindowIcon(data_icon)
         self.documents = documents
 

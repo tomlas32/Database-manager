@@ -22,7 +22,7 @@ class DatabaseManager(QMainWindow):
         ######################## specify basic main window configurations
         self.setWindowTitle("Database Manager")
         self.setWindowIcon(main_icon)
-        self.setFixedSize(900, 500)
+        self.setFixedSize(940, 600)
 
         ######################## specify layouts
         self.main_layout = QVBoxLayout()
@@ -71,10 +71,11 @@ class DatabaseManager(QMainWindow):
         # create query widgets and add to layouts
         self.query_label = QLabel("Query:")
         self.query_input = QTextEdit()
-        self.query_input.setFixedWidth(500)
-        self.query_input.setFixedHeight(80)
+        self.query_input.setPlaceholderText("Enter your query here...")
+        self.query_input.setGeometry(0, 0, 300, 60)
+        self.query_input.setFixedHeight(60)
         self.query_button = QPushButton("Search")
-        self.query_button.setFixedWidth(50)
+        self.query_button.setFixedWidth(80)
         self.query_button.clicked.connect(self.on_search_button_clicked)
         self.query_layout.addWidget(self.query_label)
         self.query_layout.addWidget(self.query_input)
@@ -87,8 +88,7 @@ class DatabaseManager(QMainWindow):
 
         # create table view widget and add to the corresponding layout
         self.table_view = QTableView()
-        self.table_view.setFixedWidth(860)
-        self.table_view.setFixedHeight(270)
+        self.table_view.setGeometry(0, 0, 800, 300)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.table_view.setEditTriggers(QAbstractItemView.NoEditTriggers)

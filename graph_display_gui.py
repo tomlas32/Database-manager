@@ -1,6 +1,14 @@
 import pyqtgraph as pg
 from PyQt5.QtCore import Qt, QItemSelection
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QFileDialog, QMainWindow, QWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import (
+    QVBoxLayout,
+    QHBoxLayout,
+    QFileDialog,
+    QMainWindow,
+    QWidget,
+    QPushButton,
+    QMessageBox,
+)
 from PyQt5.QtWidgets import QTableView, QAbstractItemView
 from PyQt5.QtGui import QIcon
 import pyqtgraph as pg
@@ -67,7 +75,7 @@ class LineGraphWindow(QMainWindow):
         self.graph_widget.setMouseEnabled(x=True, y=False)
         self.graph_widget.setClipToView(True)
         self.left_layout.addWidget(self.graph_widget)
-        
+
         self.display_graph(measurements_list, documents)
 
     def display_graph(self, measurements_list, documents):
@@ -76,17 +84,20 @@ class LineGraphWindow(QMainWindow):
         self.table_model1.update_data(documents)
 
         channel_colors = {  # Define color mapping for each channel
-        "Ch1": pg.mkColor("red"),
-        "Ch2": pg.mkColor("green"),
-        "Ch3": pg.mkColor("blue"),
-        "Ch4": pg.mkColor("yellow")
+            "Ch1": pg.mkColor("red"),
+            "Ch2": pg.mkColor("green"),
+            "Ch3": pg.mkColor("blue"),
+            "Ch4": pg.mkColor("yellow"),
         }
 
         for i, document in enumerate(documents.values()):
             entry_id = document["_id"]
             line_styles = [Qt.SolidLine, Qt.DashLine, Qt.DotLine, Qt.DashDotDotLine]
 
-            if "pressure_measurements" in document and document["pressure_measurements"]:
+            if (
+                "pressure_measurements" in document
+                and document["pressure_measurements"]
+            ):
                 measurements = document["pressure_measurements"]
                 x = [float(point[1]) for point in measurements]
                 y = [float(point[2]) for point in measurements]
@@ -99,33 +110,43 @@ class LineGraphWindow(QMainWindow):
                         x = [float(point[0]) for point in data]
                         y = [float(point[1]) for point in data]
                         line_style = line_styles.pop()
-                        pen = pg.mkPen(color=channel_colors.get(channel, 'gray'), style=line_style, width=2)  # Default pen for all plots
+                        pen = pg.mkPen(
+                            color=channel_colors.get(channel, "gray"),
+                            style=line_style,
+                            width=2,
+                        )  # Default pen for all plots
                         self.graph_widget.plot(x, y, pen=pen, name=str(entry_id))
-    
+
     # highlights plots based on user choice from tabel view
     def highlight_plot(self, selected):
         # Reset all plot items to their original style (while maintaining original color)
         for item in self.graph_widget.getPlotItem().listDataItems():
-            original_pen = item.opts['pen']
-            if original_pen.width() == 4: # Check if it's highlighted (only width changed)
+            original_pen = item.opts["pen"]
+            if (
+                original_pen.width() == 4
+            ):  # Check if it's highlighted (only width changed)
                 new_pen = pg.mkPen(
                     color=original_pen.color(),  # Keep the original color
                     width=2,  # Reset width back to 2
-                    style=original_pen.style()  # Keep original style
-                )  
-                item.setPen(new_pen)  
+                    style=original_pen.style(),  # Keep original style
+                )
+                item.setPen(new_pen)
 
         # Extract selected entry IDs
-        indexes = selected.indexes() if isinstance(selected, QItemSelection) else [selected]
-        selected_entry_ids = [self.table_model1._data[index.row()][0] for index in indexes]
+        indexes = (
+            selected.indexes() if isinstance(selected, QItemSelection) else [selected]
+        )
+        selected_entry_ids = [
+            self.table_model1._data[index.row()][0] for index in indexes
+        ]
 
         # Highlight all plots associated with selected entries
         for item in self.graph_widget.getPlotItem().listDataItems():
             if item.name() in selected_entry_ids:
                 highlight_pen = pg.mkPen(
-                    color=item.opts['pen'].color(), # Keep the original color
+                    color=item.opts["pen"].color(),  # Keep the original color
                     width=4,  # Change width to 4
-                    style=item.opts['pen'].style()  # Keep original style
+                    style=item.opts["pen"].style(),  # Keep original style
                 )
                 item.setPen(highlight_pen)
 
@@ -142,49 +163,69 @@ class LineGraphWindow(QMainWindow):
 
     # function for writing sensor data to xls file
     def write_to_xlsx(self, sensor_data):
-        file_name, _ = QFileDialog.getSaveFileName(self, "Save file", "", "Excel files (*.xlsx)")
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Save file", "", "Excel files (*.xlsx)"
+        )
 
         if not file_name:
             return  # User canceled the file selection
         try:
             workbook = xlsxwriter.Workbook(file_name)
             for entry_id, data in sensor_data.items():
-                worksheet = workbook.add_worksheet(str(entry_id))  # Name the sheet with the entry_id
-                if isinstance(data, list):  
+                worksheet = workbook.add_worksheet(
+                    str(entry_id)
+                )  # Name the sheet with the entry_id
+                if isinstance(data, list):
                     # Write header row
-                    worksheet.write_row(0, 0, ["Sensor", "Time", "Value"])  # Assuming your data has these columns
+                    worksheet.write_row(
+                        0, 0, ["Sensor", "Time", "Value"]
+                    )  # Assuming your data has these columns
                     # Write data rows (starting from row 1)
                     for row_num, point in enumerate(data, start=1):  # Start from row 1
                         worksheet.write_row(row_num, 0, point)
                 elif isinstance(data, dict):
-                    channels = list(data.keys())             # Get all channel names
+                    channels = list(data.keys())  # Get all channel names
                     header = ["Time"] + channels
                     worksheet.write_row(0, 0, header)
-                    num_rows = len(data[channels[0]]) 
+                    num_rows = len(data[channels[0]])
                     for row_num in range(num_rows):
-                        row_data = [data[ch][row_num][0] for ch in channels]  # Get time for each channel
-                        values = [data[ch][row_num][1] for ch in channels]    # Get temp value for each channel
-                        row_data = [row_data[0]] + values                     # Combine time and values
+                        row_data = [
+                            data[ch][row_num][0] for ch in channels
+                        ]  # Get time for each channel
+                        values = [
+                            data[ch][row_num][1] for ch in channels
+                        ]  # Get temp value for each channel
+                        row_data = [row_data[0]] + values  # Combine time and values
                         worksheet.write_row(row_num + 1, 0, row_data)
 
             workbook.close()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred while saving the file:\n{e}", QMessageBox.Ok)
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while saving the file:\n{e}",
+                QMessageBox.Ok,
+            )
             return  # Exit the function on error
-    
+
     # helper function for exporting data into xslx format
     def export_data(self):
         try:
             sensor_data = self.get_sensor_data(self.documents)
             self.write_to_xlsx(sensor_data)
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred while exporting the data:\n{e}", QMessageBox.Ok)
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"An error occurred while exporting the data:\n{e}",
+                QMessageBox.Ok,
+            )
             return  # Exit the function on error
 
-    #exit function
+    # exit function
     def close_window(self):
         self.close()
-    
+
     def resource_path(self, relative_path):
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS

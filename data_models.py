@@ -1,5 +1,7 @@
 from PyQt5.QtCore import Qt, QModelIndex, QAbstractTableModel
 
+
+# Class to handle table model
 class MeasurementTableModel(QAbstractTableModel):
     def __init__(self, parent=None, documents=None):
         super().__init__(parent)
@@ -27,14 +29,21 @@ class MeasurementTableModel(QAbstractTableModel):
             elif col == 1:
                 return document.get("user_id", "")  # Handle missing values
             elif col == 2:
-                return document.get("test_date", "") 
+                return document.get("test_date", "")
             elif col == 3:
                 return document.get("instrument_id", "")
             elif col == 4:
                 return document.get("cartridge_number", "")
             elif col == 5:
                 return document.get("protocol", "")
-    
-    def headerData(self, section, orientation, role=Qt.DisplayRole): 
+
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return ["_id", "User ID", "Test Date", "Instrument", "Cartridge No.", "Protocol script"][section]
+            return [
+                "_id",
+                "User ID",
+                "Test Date",
+                "Instrument",
+                "Cartridge No.",
+                "Protocol script",
+            ][section]

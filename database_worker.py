@@ -1,6 +1,8 @@
 from PyQt5.QtCore import pyqtSignal, QObject
 import database as db
 
+
+# Class to handle database search
 class DatabaseWorker(QObject):
     finished = pyqtSignal(list)  # Signal to indicate completion
 
@@ -13,10 +15,12 @@ class DatabaseWorker(QObject):
     def run(self):
         documents = self.search_database(self.query)
         self.finished.emit(documents)  # Emit the result (list)
-    
-    # function to search database based on given query 
+
+    # function to search database based on given query
     def search_database(self, query):
         # Now you can use self.db_name and self.collection_name
         if self.db_name and self.collection_name:
-            documents = list(db.find_documents(self.db_name, self.collection_name, query))
+            documents = list(
+                db.find_documents(self.db_name, self.collection_name, query)
+            )
         return documents
